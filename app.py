@@ -4,9 +4,15 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib
+# import pickle
 
 # Load the dataset
-df = pd.read_csv("Crops.csv")
+df = pd.read_csv("assets/Crops.csv")
+# Load the model (make sure you have saved the model using joblib and named it 'crop_model.joblib')
+# with open("assets/crop_model_rf.pkl", "rb") as f:
+#     model = pickle.load(f)
+
+model = joblib.load('assets/models/crop_model_rf.joblib')  
 
 # Set up the layout of the app
 st.title("Crop Prediction App")
@@ -16,7 +22,7 @@ st.sidebar.markdown("Select a page to navigate:")
 # Create a sidebar navigation
 navigation = st.sidebar.radio("Pages", ["Infographic", "Prediction"])
 
-if navigation == "Infographic":
+def info():
     st.header("Infographic Section")
 
     # Scatter plot of temperature vs rainfall
@@ -25,7 +31,8 @@ if navigation == "Infographic":
     sns.scatterplot(x='temperature', y='rainfall', hue='label', data=df)
     st.pyplot(plt)
 
-elif navigation == "Prediction":
+def pred():
+    # st.write(model)
     st.header("Crop Prediction Section")
 
     # Create input fields for the features
@@ -42,8 +49,7 @@ elif navigation == "Prediction":
     # Prepare the feature array for prediction
     features = np.array([[N, P, K, temperature, humidity, ph, rainfall]])
 
-    # Load the model (make sure you have saved the model using joblib and named it 'crop_model.joblib')
-    model = joblib.load("crop_model.joblib")
+  
 
     # Predict the crop
     if st.button('Predict Crop'):
@@ -82,5 +88,12 @@ elif navigation == "Prediction":
     if crop:
         st.info(crop_details[crop])
 
-# Save the file as 'app.py' and run it using 'streamlit run app.py' in your terminal
+def main():
+    if navigation == "Infographic":
+        info()
 
+    elif navigation == "Prediction":
+        pred()
+
+if __name__ == "__main__":
+    main()
