@@ -7,12 +7,12 @@ import joblib
 # import pickle
 
 # Load the dataset
-df = pd.read_csv("assets/Crops.csv")
+df = pd.read_csv("Crops.csv")
 # Load the model (make sure you have saved the model using joblib and named it 'crop_model.joblib')
 # with open("assets/crop_model_rf.pkl", "rb") as f:
 #     model = pickle.load(f)
 
-model = joblib.load('assets/models/crop_model_rf.joblib')  
+model = joblib.load('crop_model.joblib')  
 
 # Set up the layout of the app
 st.title("Crop Prediction App")
