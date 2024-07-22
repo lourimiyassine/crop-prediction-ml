@@ -5,9 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib
 
-# Load the dataset
+# Load the dataset and model
 df = pd.read_csv("assets/Crops.csv")
-# Load the model (make sure you have saved the model using joblib and named it 'crop_model.joblib')
 model = joblib.load('assets/models/crop_model_rf.joblib')
 
 # Set up the layout of the app
@@ -22,7 +21,7 @@ def overview():
     st.header("Overview")
     st.subheader("Project Title: Crop Prediction Using Machine Learning")
     st.write("""
-    **Description**: This project is designed to predict the most suitable crop to plant based on specific environmental conditions such as soil nutrients, temperature, humidity, pH level, and rainfall. By utilizing machine learning, this app helps farmers and agricultural planners make data-driven decisions to optimize crop yield and sustainability.
+    **Description**: This project predicts the most suitable crop to plant based on specific environmental conditions such as soil nutrients, temperature, humidity, pH level, and rainfall. It helps farmers and agricultural planners make data-driven decisions to optimize crop yield and sustainability.
 
     **Why Introduce This Project?** 
     - Agricultural efficiency and productivity are crucial for meeting the demands of a growing population.
@@ -61,16 +60,15 @@ def info():
     ]
 
     col1, col2 = st.columns(2)
-    with col1:
-        for crop in crops[:len(crops)//2]:
-            st.write(f"- **{crop}**")
-
-    with col2:
-        for crop in crops[len(crops)//2:]:
-            st.write(f"- **{crop}**")
+    for i, crop in enumerate(crops):
+        if i < len(crops) // 2:
+            col1.write(f"- **{crop}**")
+        else:
+            col2.write(f"- **{crop}**")
 
     st.subheader("Statistical Summary")
-    st.write(df.describe())
+    # Round the statistical summary to two decimal places
+    st.write(df.describe().round(2))
 
     st.subheader("Crops and Their Attributes")
     st.write("""
@@ -86,7 +84,7 @@ def info():
     sns.scatterplot(x='temperature', y='rainfall', hue='label', data=df[df['label'] == selected_crop])
     plt.title(f"Scatter Plot for {selected_crop}")
     st.pyplot(plt)
-    st.subheader("Scatter Plot of Temperature vs Rainfall")
+
     plt.figure(figsize=(10, 6))
     sns.scatterplot(x='temperature', y='rainfall', hue='label', data=df)
     st.pyplot(plt)
@@ -114,6 +112,19 @@ def info():
         plt.xlabel(descriptions[attribute])
         st.pyplot(plt)
 
+    # Add the new scatter plot here
+    st.subheader("Crop Suitability in High Temperature Conditions")
+    plt.figure(figsize=(12, 8))  # Set the plot size
+    plt.rcParams['figure.dpi'] = 150  # Set the plot DPI
+    sns.scatterplot(x=df['temperature'], y=df['label'], hue=df['label'], palette='viridis', s=100, alpha=0.7)
+    plt.title('Crop Suitability in High Temperature Conditions', fontsize=15)
+    plt.xlabel('Temperature', fontsize=12)
+    plt.ylabel('Crop', fontsize=12)
+    plt.legend(title='Crop', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.grid(True)
+    plt.tight_layout()
+    st.pyplot(plt)
+
 def pred():
     st.header("Crop Prediction Section")
 
@@ -123,10 +134,10 @@ def pred():
     N = st.slider('Nitrogen (N)', min_value=0, max_value=140, value=60)
     P = st.slider('Phosphorous (P)', min_value=5, max_value=145, value=60)
     K = st.slider('Potassium (K)', min_value=5, max_value=205, value=60)
-    temperature = st.slider('Temperature', min_value=8.0, max_value=43.0, value=25.0)
-    humidity = st.slider('Humidity', min_value=14.0, max_value=99.0, value=60.0)
-    ph = st.slider('pH', min_value=3.5, max_value=10.0, value=6.5)
-    rainfall = st.slider('Rainfall', min_value=20.0, max_value=300.0, value=100.0)
+    temperature = st.number_input('Temperature (°C)', min_value=8.0, max_value=43.0, value=25.0)
+    humidity = st.number_input('Humidity (%)', min_value=14.0, max_value=99.0, value=60.0)
+    ph = st.number_input('pH', min_value=3.5, max_value=10.0, value=6.5)
+    rainfall = st.number_input('Rainfall (mm)', min_value=20.0, max_value=300.0, value=100.0)
 
     # Prepare the feature array for prediction
     features = np.array([[N, P, K, temperature, humidity, ph, rainfall]])
@@ -169,42 +180,38 @@ def pred():
     # Details about each crop
     st.subheader("Crop Details")
     crop_details = {
-        "rice": "Rice is a staple food crop that requires high temperatures ranging from 20°C to 30°C, high humidity, and a substantial amount of water for optimal growth. It is typically grown in flooded conditions known as paddies, which help to control weeds and pests. Rice cultivation is labor-intensive, and it thrives in well-drained, fertile soils rich in organic matter. Proper water management is crucial for rice, as it needs consistent moisture throughout its growing season.",
-        "wheat": "Wheat is a major cereal crop that grows best in cool, moist conditions and well-drained soils. It is usually planted in the fall and harvested in the summer. Optimal growth temperatures range from 12°C to 25°C. Wheat requires a period of cold weather to trigger flowering, a process known as vernalization. It is a versatile crop that can be used for various products, including bread, pasta, and cereals. Wheat cultivation benefits from moderate rainfall and deep, loamy soils.",
-        "maize": "Maize, also known as corn, is a versatile crop that thrives in warm climates with temperatures ranging from 18°C to 27°C. It requires moderate rainfall and fertile, well-drained soils. Maize is a staple food in many parts of the world and is used for human consumption, animal feed, and biofuel production. Proper management of pests and diseases is essential for high maize yields, and it benefits from crop rotation practices to maintain soil fertility.",
-        "chickpea": "Chickpeas are a type of legume that grow best in cool, dry climates with temperatures between 10°C and 25°C. They require well-drained, loamy soils and are relatively drought-tolerant. Chickpeas are a rich source of protein and are used in various dishes worldwide. They improve soil fertility through nitrogen fixation, making them a valuable crop in crop rotation systems. Chickpeas require minimal irrigation and are often grown as a rainfed crop.",
-        "kidneybeans": "Kidney beans are a popular legume that grows best in warm climates with temperatures ranging from 18°C to 30°C. They require well-drained, sandy loam soils and moderate rainfall. Kidney beans are a rich source of protein and dietary fiber, making them a valuable addition to vegetarian diets. Proper pest and disease management is crucial for high yields, and they benefit from crop rotation practices to maintain soil health.",
-        "pigeonpeas": "Pigeon peas are a legume crop that thrives in warm, semi-arid climates with temperatures between 20°C and 35°C. They are drought-tolerant and can be grown in poor soils, but they perform best in well-drained loamy soils. Pigeon peas are a rich source of protein and are used in various culinary dishes worldwide. They improve soil fertility through nitrogen fixation and are often grown as a companion crop to provide shade and support to other plants.",
-        "mothbeans": "Moth beans are a drought-tolerant legume that grows well in arid and semi-arid regions with temperatures ranging from 20°C to 30°C. They require sandy, well-drained soils and minimal rainfall. Moth beans are a rich source of protein and are often used in traditional Indian cuisine. They are an important crop in dryland farming systems and help improve soil fertility through nitrogen fixation.",
-        "mungbean": "Mung beans are a warm-season legume that thrives in tropical and subtropical climates with temperatures between 25°C and 35°C. They require well-drained loamy soils and moderate rainfall. Mung beans are a rich source of protein and are used in various culinary dishes, including soups and salads. They are often grown as a cover crop to improve soil fertility and prevent erosion.",
-        "blackgram": "Black gram, also known as urad bean, is a legume that grows well in warm, humid climates with temperatures ranging from 25°C to 35°C. It requires well-drained loamy soils and moderate rainfall. Black gram is a rich source of protein and is widely used in Indian cuisine. It improves soil fertility through nitrogen fixation and is often grown as a companion crop with cereals.",
-        "lentil": "Lentils are a cool-season legume that grows best in temperate climates with temperatures between 15°C and 25°C. They require well-drained loamy soils and moderate rainfall. Lentils are a rich source of protein and are used in various dishes worldwide. They improve soil fertility through nitrogen fixation and are an important crop in sustainable farming systems.",
-        "pomegranate": "Pomegranates are a fruit crop that thrives in hot, dry climates with temperatures ranging from 25°C to 35°C. They require well-drained sandy loam soils and minimal rainfall. Pomegranates are rich in antioxidants and are used in various culinary dishes and beverages. They are drought-tolerant and can be grown in arid regions with proper irrigation.",
-        "banana": "Bananas are a tropical fruit crop that grows best in warm, humid climates with temperatures between 26°C and 30°C. They require well-drained loamy soils and abundant rainfall. Bananas are rich in carbohydrates and are a staple food in many tropical regions. They require consistent moisture and proper pest and disease management for optimal yields.",
-        "mango": "Mangoes are a tropical fruit crop that thrives in hot, humid climates with temperatures ranging from 24°C to 30°C. They require well-drained sandy loam soils and moderate rainfall. Mangoes are rich in vitamins and are widely consumed fresh or in processed forms. Proper pest and disease management is essential for high yields, and they require regular pruning and irrigation.",
-        "grapes": "Grapes are a fruit crop that grows best in temperate climates with temperatures between 15°C and 25°C. They require well-drained loamy soils and moderate rainfall. Grapes are used for fresh consumption, wine production, and raisin making. Proper management of pests and diseases is crucial for high yields, and they benefit from trellising and pruning practices.",
-        "watermelon": "Watermelons are a warm-season fruit crop that thrives in hot, dry climates with temperatures ranging from 25°C to 30°C. They require well-drained sandy loam soils and moderate rainfall. Watermelons are a rich source of vitamins and are widely consumed fresh. They require proper pest and disease management and consistent moisture for optimal yields.",
-        "muskmelon": "Muskmelons are a warm-season fruit crop that grows best in hot, dry climates with temperatures between 25°C and 30°C. They require well-drained sandy loam soils and moderate rainfall. Muskmelons are rich in vitamins and are widely consumed fresh. Proper pest and disease management is essential for high yields, and they require consistent moisture throughout their growing season.",
-        "apple": "Apples are a temperate fruit crop that grows best in cool climates with temperatures ranging from 15°C to 24°C. They require well-drained loamy soils and moderate rainfall. Apples are rich in vitamins and are widely consumed fresh or in processed forms. Proper pest and disease management is crucial for high yields, and they require regular pruning and irrigation.",
-        "orange": "Oranges are a citrus fruit crop that thrives in warm, humid climates with temperatures between 20°C and 30°C. They require well-drained sandy loam soils and moderate rainfall. Oranges are rich in vitamin C and are widely consumed fresh or as juice. Proper pest and disease management is essential for high yields, and they require consistent moisture throughout their growing season.",
-        "papaya": "Papayas are a tropical fruit crop that grows best in warm, humid climates with temperatures ranging from 25°C to 30°C. They require well-drained loamy soils and abundant rainfall. Papayas are rich in vitamins and are widely consumed fresh or in processed forms. Proper pest and disease management is crucial for high yields, and they require consistent moisture and regular pruning.",
-        "coconut": "Coconuts are a tropical fruit crop that thrives in hot, humid climates with temperatures between 27°C and 32°C. They require well-drained sandy soils and abundant rainfall. Coconuts are used for various products, including coconut milk, oil, and water. They require consistent moisture and proper pest and disease management for optimal yields.",
-        "cotton": "Cotton is a fiber crop that grows best in warm climates with temperatures ranging from 25°C to 35°C. It requires well-drained sandy loam soils and moderate rainfall. Cotton is used for textile production and is an important cash crop in many regions. Proper pest and disease management is crucial for high yields, and it benefits from crop rotation practices to maintain soil health.",
-        "jute": "Jute is a fiber crop that thrives in hot, humid climates with temperatures between 24°C and 37°C. It requires well-drained sandy loam soils and abundant rainfall. Jute is used for making burlap, ropes, and other products. Proper water management is crucial for high yields, and it requires consistent moisture throughout its growing season.",
-        "coffee": "Coffee is a tropical crop that grows best in cool, humid climates with temperatures ranging from 15°C to 24°C. It requires well-drained, fertile soils and moderate rainfall. Coffee is used for making beverages and is an important cash crop in many regions. Proper pest and disease management is crucial for high yields, and it requires regular pruning and irrigation."
+        "rice": "Rice is a staple food crop that requires high temperatures ranging from 20°C to 30°C, high humidity, and a substantial amount of water for optimal growth. It is typically grown in flooded conditions known as paddies.",
+        "wheat": "Wheat is a versatile cereal crop that thrives in temperate climates with temperatures between 10°C and 25°C. It requires well-drained loamy soil and moderate rainfall or irrigation for good yield.",
+        "maize": "Maize, also known as corn, is a cereal crop that grows well in warm weather with temperatures between 21°C and 30°C. It needs moderate rainfall and well-drained, fertile soil.",
+        "chickpea": "Chickpea is a legume crop that prefers cooler climates with temperatures ranging from 18°C to 30°C. It requires well-drained loamy soil and low to moderate rainfall.",
+        "kidneybeans": "Kidney beans require temperatures between 15°C and 25°C, moderate rainfall, and fertile, well-drained soil for optimal growth.",
+        "pigeonpeas": "Pigeon peas are a drought-tolerant legume that grows well in warm climates with temperatures between 18°C and 30°C. They require well-drained soil and moderate rainfall.",
+        "mothbeans": "Moth beans are a drought-resistant legume that thrives in warm climates with temperatures between 25°C and 30°C. They require well-drained sandy soil and low to moderate rainfall.",
+        "mungbean": "Mung bean is a warm-season legume that grows well in temperatures between 25°C and 35°C. It requires well-drained loamy soil and moderate rainfall.",
+        "blackgram": "Black gram is a legume that prefers warm weather with temperatures between 25°C and 35°C. It requires well-drained loamy soil and moderate rainfall.",
+        "lentil": "Lentil is a cool-season legume that grows well in temperatures between 18°C and 30°C. It requires well-drained loamy soil and moderate rainfall.",
+        "pomegranate": "Pomegranate is a fruit-bearing shrub that thrives in warm, dry climates with temperatures between 25°C and 35°C. It requires well-drained sandy loam soil and low to moderate rainfall.",
+        "banana": "Banana is a tropical fruit crop that requires warm temperatures between 25°C and 35°C, high humidity, and substantial rainfall or irrigation for optimal growth.",
+        "mango": "Mango is a tropical fruit crop that thrives in warm climates with temperatures between 24°C and 30°C. It requires well-drained sandy loam soil and moderate rainfall.",
+        "grapes": "Grapes are a fruit crop that grows well in warm, dry climates with temperatures between 18°C and 30°C. They require well-drained sandy loam soil and low to moderate rainfall.",
+        "watermelon": "Watermelon is a warm-season fruit crop that requires temperatures between 25°C and 30°C, well-drained sandy soil, and moderate rainfall.",
+        "muskmelon": "Muskmelon is a warm-season fruit crop that thrives in temperatures between 25°C and 30°C. It requires well-drained sandy soil and moderate rainfall.",
+        "apple": "Apple is a temperate fruit crop that grows well in cool climates with temperatures between 18°C and 25°C. It requires well-drained loamy soil and moderate rainfall.",
+        "orange": "Orange is a citrus fruit crop that thrives in warm, subtropical climates with temperatures between 20°C and 30°C. It requires well-drained sandy loam soil and moderate rainfall.",
+        "papaya": "Papaya is a tropical fruit crop that grows well in warm climates with temperatures between 25°C and 30°C. It requires well-drained sandy loam soil and moderate rainfall.",
+        "coconut": "Coconut is a tropical crop that thrives in warm, humid climates with temperatures between 20°C and 30°C. It requires well-drained sandy loam soil and substantial rainfall.",
+        "cotton": "Cotton is a warm-season crop that grows well in temperatures between 25°C and 35°C. It requires well-drained sandy loam soil and moderate rainfall.",
+        "jute": "Jute is a tropical fiber crop that requires warm, humid climates with temperatures between 25°C and 35°C. It requires well-drained loamy soil and substantial rainfall.",
+        "coffee": "Coffee is a tropical crop that grows well in warm, humid climates with temperatures between 15°C and 25°C. It requires well-drained loamy soil and moderate rainfall."
     }
-    
-    crop = prediction[0] if 'prediction' in locals() else None
-    if crop:
-        st.info(crop_details[crop])
 
-def main():
-    if navigation == "Overview":
-        overview()
-    elif navigation == "Infographic":
-        info()
-    elif navigation == "Prediction":
-        pred()
+    selected_crop = st.selectbox("Select a crop to view details", list(crop_details.keys()))
+    st.write(crop_details[selected_crop])
 
-if __name__ == "__main__":
-    main()
+# Show the selected page
+if navigation == "Overview":
+    overview()
+elif navigation == "Infographic":
+    info()
+elif navigation == "Prediction":
+    pred()
