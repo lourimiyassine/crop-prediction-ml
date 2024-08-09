@@ -10,16 +10,17 @@ df = pd.read_csv("assets/Crops.csv")
 model = joblib.load('assets/models/crop_model_rf.joblib')
 
 # Set up the layout of the app
-st.title("Crop Prediction App")
+st.title("Crop Prediction App (created by:yassine lourimi)")
 st.sidebar.title("Navigation")
 st.sidebar.markdown("Select a page to navigate:")
+
 
 # Create a sidebar navigation
 navigation = st.sidebar.radio("Pages", ["Overview", "Infographic", "Prediction"])
 
 def overview():
     st.header("Overview")
-    st.subheader("Project Title: Crop Prediction Using Machine Learning")
+    st.subheader("Project Title: Crop Prediction Using Machine Learning ")
     st.write("""
     **Description**: This project predicts the most suitable crop to plant based on specific environmental conditions such as soil nutrients, temperature, humidity, pH level, and rainfall. It helps farmers and agricultural planners make data-driven decisions to optimize crop yield and sustainability.
 
@@ -124,6 +125,7 @@ def info():
     plt.grid(True)
     plt.tight_layout()
     st.pyplot(plt)
+    
 
 def pred():
     st.header("Crop Prediction Section")
